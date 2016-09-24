@@ -14,6 +14,7 @@ add_message_files(DIRECTORY msg FILES
                   Color.msg Pose.msg)
 add_service_files(DIRECTORY srv FILES
                   Kill.srv
+                  SetText.srv
                   SetPen.srv
                   Spawn.srv
                   TeleportAbsolute.srv

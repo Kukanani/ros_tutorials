@@ -44,8 +44,6 @@ namespace turtlesim
 
 TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f)
 : QFrame(parent, f)
-, path_image_(0, 0, QImage::Format_ARGB32)
-, path_painter_(&path_image_)
 , frame_count_(0)
 , id_counter_(0)
 {
@@ -54,8 +52,16 @@ TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f)
   nh_.param("worldsize_y", size_y, 500);
 
   path_image_ = QImage(size_x, size_y, QImage::Format_ARGB32);
+  bg_image_ = QImage(size_x, size_y, QImage::Format_ARGB32);
+  path_painter_ = new QPainter(&path_image_);
   setFixedSize(size_x, size_y);
-  setWindowTitle("TurtleSim");
+
+  r = DEFAULT_BG_R;
+  g = DEFAULT_BG_G;
+  b = DEFAULT_BG_B;
+
+  std::string window_title = nh_.param<std::string>("world_name", "TurtleSim");
+  setWindowTitle(QString(window_title.c_str()));
 
   srand(time(NULL));
 
@@ -200,15 +206,12 @@ std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, 
 
 void TurtleFrame::clear()
 {
-  int r = DEFAULT_BG_R;
-  int g = DEFAULT_BG_G;
-  int b = DEFAULT_BG_B;
-
   nh_.param("background_r", r, r);
   nh_.param("background_g", g, g);
   nh_.param("background_b", b, b);
 
-  path_image_.fill(qRgb(r, g, b));
+  bg_image_.fill(qRgb(r,g,b));
+  path_image_.fill(qRgba(0,0,0,0));
   update();
 }
 
@@ -228,6 +231,8 @@ void TurtleFrame::paintEvent(QPaintEvent*)
 {
   QPainter painter(this);
 
+  bg_image_.fill(qRgb(r,g,b));
+  painter.drawImage(QPoint(0, 0), bg_image_);
   painter.drawImage(QPoint(0, 0), path_image_);
 
   M_Turtle::iterator it = turtles_.begin();
@@ -251,7 +256,7 @@ void TurtleFrame::updateTurtles()
   M_Turtle::iterator end = turtles_.end();
   for (; it != end; ++it)
   {
-    modified |= it->second->update(0.001 * update_timer_->interval(), path_painter_, path_image_, width_in_meters_, height_in_meters_);
+    modified |= it->second->update(0.001 * update_timer_->interval(), *path_painter_, path_image_, width_in_meters_, height_in_meters_);
   }
   if (modified)
   {
@@ -274,7 +279,7 @@ bool TurtleFrame::resetCallback(std_srvs::Empty::Request&, std_srvs::Empty::Resp
   ROS_INFO("Resetting turtlesim.");
   turtles_.clear();
   id_counter_ = 0;
-  spawnTurtle("", width_in_meters_ / 2.0, height_in_meters_ / 2.0, 0);
+  spawnTurtle("", width_in_meters_ / 2.0, height_in_meters_ / 2.0, 0, 0);
   clear();
   return true;
 }

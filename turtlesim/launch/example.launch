@@ -1,17 +1,18 @@
 <launch>
 	<!-- These are the settable parameters for this node. Shown here are the defaults. -->
+	<param name="world_name" type="string" value="TurtleSim" />
 	<param name="worldsize_x" type="int" value="500" />
 	<param name="worldsize_y" type="int" value="500" />
 	<param name="spawn_on_start" type="bool" value="true" />
 
 	<param name="spawn_x" type="int" value="250" />
 	<param name="spawn_y" type="int" value="250" />
-
+	<param name="spawn_name" type="string" value="teleop" />
 
 	<param name="background_r" type="int" value="0x45" />
 	<param name="background_g" type="int" value="0x56" />
 	<param name="background_b" type="int" value="0xff" />
 
 
-	<node name="world" pkg="turtlesim" type="turtlesim_node" args="" required="true" />
+	<node name="world" pkg="turtlesim" type="turtlesim_node" args="" required="true"/>
 </launch>

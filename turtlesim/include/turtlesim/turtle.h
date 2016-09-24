@@ -38,6 +38,7 @@
 # include <turtlesim/Pose.h>
 # include <geometry_msgs/Twist.h>
 # include <turtlesim/SetPen.h>
+# include <turtlesim/SetText.h>
 # include <turtlesim/TeleportRelative.h>
 # include <turtlesim/TeleportAbsolute.h>
 # include <turtlesim/Color.h>
@@ -62,6 +63,7 @@ public:
   void paint(QPainter &painter);
 private:
   void velocityCallback(const geometry_msgs::Twist::ConstPtr& vel);
+  bool setTextCallback(turtlesim::SetText::Request&, turtlesim::SetText::Response&);
   bool setPenCallback(turtlesim::SetPen::Request&, turtlesim::SetPen::Response&);
   bool teleportRelativeCallback(turtlesim::TeleportRelative::Request&, turtlesim::TeleportRelative::Response&);
   bool teleportAbsoluteCallback(turtlesim::TeleportAbsolute::Request&, turtlesim::TeleportAbsolute::Response&);
@@ -81,10 +83,13 @@ private:
   bool pen_on_;
   QPen pen_;
 
+  std::string text_;
+
   ros::Subscriber velocity_sub_;
   ros::Publisher pose_pub_;
   ros::Publisher color_pub_;
   ros::ServiceServer set_pen_srv_;
+  ros::ServiceServer set_text_srv_;
   ros::ServiceServer teleport_relative_srv_;
   ros::ServiceServer teleport_absolute_srv_;
 

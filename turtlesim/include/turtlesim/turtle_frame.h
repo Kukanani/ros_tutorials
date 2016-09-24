@@ -78,9 +78,12 @@ private:
   ros::NodeHandle nh_;
   QTimer* update_timer_;
   QImage path_image_;
-  QPainter path_painter_;
+  QImage bg_image_;
+  QPainter* path_painter_;
 
   uint64_t frame_count_;
+
+  int r, g, b;
 
   ros::WallTime last_turtle_update_;
 

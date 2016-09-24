@@ -55,6 +55,7 @@ Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPoi
   pose_pub_ = nh_.advertise<Pose>("pose", 1);
   color_pub_ = nh_.advertise<Color>("color_sensor", 1);
   set_pen_srv_ = nh_.advertiseService("set_pen", &Turtle::setPenCallback, this);
+  set_text_srv_ = nh_.advertiseService("set_text", &Turtle::setTextCallback, this);
   teleport_relative_srv_ = nh_.advertiseService("teleport_relative", &Turtle::teleportRelativeCallback, this);
   teleport_absolute_srv_ = nh_.advertiseService("teleport_absolute", &Turtle::teleportAbsoluteCallback, this);
 
@@ -85,6 +86,13 @@ bool Turtle::setPenCallback(turtlesim::SetPen::Request& req, turtlesim::SetPen::
   }
 
   pen_ = pen;
+  return true;
+}
+
+
+bool Turtle::setTextCallback(turtlesim::SetText::Request& req, turtlesim::SetText::Response&)
+{
+  text_ = req.text;
   return true;
 }
 
@@ -133,14 +141,19 @@ bool Turtle::update(double dt, QPainter& path_painter, const QImage& path_image,
       orient_ = req.theta;
     }
 
-    path_painter.setPen(pen_);
-    path_painter.drawLine(pos_ * meter_, old_pos * meter_);
-    modified = true;
+
+    if (pen_on_)
+    {
+      path_painter.setPen(pen_);
+      path_painter.drawLine(pos_ * meter_, old_pos * meter_);
+      modified = true;
+    }
+  
   }
 
   teleport_requests_.clear();
 
-  if (ros::WallTime::now() - last_command_time_ > ros::WallDuration(1.0))
+  if (ros::WallTime::now() - last_command_time_ > ros::WallDuration(0.1))
   {
     lin_vel_ = 0.0;
     ang_vel_ = 0.0;
@@ -181,6 +194,7 @@ bool Turtle::update(double dt, QPainter& path_painter, const QImage& path_image,
     color_pub_.publish(color);
   }
 
+
   ROS_DEBUG("[%s]: pos_x: %f pos_y: %f theta: %f", nh_.getNamespace().c_str(), pos_.x(), pos_.y(), orient_);
 
   if (orient_ != old_orient)
@@ -207,6 +221,10 @@ void Turtle::paint(QPainter& painter)
   p.rx() -= 0.5 * turtle_rotated_image_.width();
   p.ry() -= 0.5 * turtle_rotated_image_.height();
   painter.drawImage(p, turtle_rotated_image_);
+
+  QPen pen(QColor(0, 0, 0));
+  painter.setPen(pen);
+  painter.drawText(((pos_ + QPointF(0.35, 0.2))* meter_), QString(text_.c_str()));
 }
 
 }
