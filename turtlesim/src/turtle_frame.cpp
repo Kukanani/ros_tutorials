@@ -44,12 +44,17 @@ namespace turtlesim
 
 TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f)
 : QFrame(parent, f)
-, path_image_(500, 500, QImage::Format_ARGB32)
+, path_image_(0, 0, QImage::Format_ARGB32)
 , path_painter_(&path_image_)
 , frame_count_(0)
 , id_counter_(0)
 {
-  setFixedSize(500, 500);
+  int size_x, size_y;
+  nh_.param("worldsize_x", size_x, 500);
+  nh_.param("worldsize_y", size_y, 500);
+
+  path_image_ = QImage(size_x, size_y, QImage::Format_ARGB32);
+  setFixedSize(size_x, size_y);
   setWindowTitle("TurtleSim");
 
   srand(time(NULL));
@@ -59,10 +64,6 @@ TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f)
   update_timer_->start();
 
   connect(update_timer_, SIGNAL(timeout()), this, SLOT(onUpdate()));
-
-  nh_.setParam("background_r", DEFAULT_BG_R);
-  nh_.setParam("background_g", DEFAULT_BG_G);
-  nh_.setParam("background_b", DEFAULT_BG_B);
 
   QVector<QString> turtles;
   turtles.append("box-turtle.png");
@@ -96,7 +97,18 @@ TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f)
 
   width_in_meters_ = (width() - 1) / meter_;
   height_in_meters_ = (height() - 1) / meter_;
-  spawnTurtle("", width_in_meters_ / 2.0, height_in_meters_ / 2.0, 0);
+
+  bool spawn_on_start;
+  nh_.param("spawn_on_start", spawn_on_start, true);
+
+  if(spawn_on_start) {
+    int spawn_x_pix, spawn_y_pix;
+    nh_.param("spawn_x", spawn_x_pix, 500);
+    nh_.param("spawn_y", spawn_y_pix, 500);
+    float spawn_x = ((float)spawn_x_pix) / size_x * width_in_meters_;
+    float spawn_y = ((float)spawn_y_pix) / size_y * height_in_meters_;
+    spawnTurtle("", spawn_x, spawn_y, 0, 0);
+  }
 
   // spawn all available turtle types
   if(FALSE)
@@ -118,7 +130,7 @@ TurtleFrame::~TurtleFrame()
 
 bool TurtleFrame::spawnCallback(turtlesim::Spawn::Request& req, turtlesim::Spawn::Response& res)
 {
-  std::string name = spawnTurtle(req.name, req.x, req.y, req.theta);
+  std::string name = spawnTurtle(req.name, req.x, req.y, req.theta, req.index);
   if (name.empty())
   {
     ROS_ERROR("A turtled named [%s] already exists", req.name.c_str());
@@ -175,7 +187,9 @@ std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, 
     }
   }
 
-  TurtlePtr t(new Turtle(ros::NodeHandle(real_name), turtle_images_[index], QPointF(x, height_in_meters_ - y), angle));
+  int clampedIndex = std::min(((int)(std::max(0, (int)index))), (int)(turtle_images_.size()-1));
+
+  TurtlePtr t(new Turtle(ros::NodeHandle(real_name), turtle_images_[clampedIndex], QPointF(x, height_in_meters_ - y), angle));
   turtles_[real_name] = t;
   update();
 
