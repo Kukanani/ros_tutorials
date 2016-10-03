@@ -36,6 +36,8 @@
 #define DEFAULT_PEN_G 0xb8
 #define DEFAULT_PEN_B 0xff
 
+#define SCALE_FAC 2
+
 namespace turtlesim
 {
 
@@ -225,6 +227,20 @@ void Turtle::paint(QPainter& painter)
   QPen pen(QColor(0, 0, 0));
   painter.setPen(pen);
   painter.drawText(((pos_ + QPointF(0.35, 0.2))* meter_), QString(text_.c_str()));
+
+
+  float c_x = 0.2 * SCALE_FAC;
+  float c_y = 0.5 * SCALE_FAC;
+
+  // draw rotated ellipse to show personal space
+  QRect rect = QRect(pos_.x() * meter_ - c_x * meter_, pos_.y() * meter_ - c_y * meter_, c_x * 2 * meter_, c_y * 2 * meter_);
+  QPoint center = rect.center();
+
+  painter.translate(center.x(), center.y());
+  painter.rotate(-orient_ * 180.0 / PI + 90.0);
+  painter.translate(-center.x(), -center.y());
+  painter.drawEllipse(rect);
+  painter.resetTransform();
 }
 
 }

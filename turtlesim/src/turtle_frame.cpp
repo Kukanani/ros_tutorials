@@ -111,8 +111,8 @@ TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f)
     int spawn_x_pix, spawn_y_pix;
     nh_.param("spawn_x", spawn_x_pix, 500);
     nh_.param("spawn_y", spawn_y_pix, 500);
-    float spawn_x = ((float)spawn_x_pix) / size_x * width_in_meters_;
-    float spawn_y = ((float)spawn_y_pix) / size_y * height_in_meters_;
+    float spawn_x = width_in_meters_ / 2;
+    float spawn_y = height_in_meters_ / 2;
     spawnTurtle("", spawn_x, spawn_y, 0, 0);
   }
 
@@ -194,6 +194,8 @@ std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, 
   }
 
   int clampedIndex = std::min(((int)(std::max(0, (int)index))), (int)(turtle_images_.size()-1));
+
+  std::cout << "clamped index: " << clampedIndex << std::endl;
 
   TurtlePtr t(new Turtle(ros::NodeHandle(real_name), turtle_images_[clampedIndex], QPointF(x, height_in_meters_ - y), angle));
   turtles_[real_name] = t;

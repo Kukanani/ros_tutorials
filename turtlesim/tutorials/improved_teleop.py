@@ -3,8 +3,13 @@
 import sys
 import pygame
 import rospy
+import signal
 from geometry_msgs.msg import Twist
 
+def signal_handler(signal, frame):
+        print('Quitting teleop.')
+        sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
 ###########################################################
 # pygame
 pygame.init()
@@ -27,7 +32,8 @@ lin_speed = 1.0
 
 #########################################################
 # loop
-while 1:
+stopped = False
+while not stopped:
     angular_movement = 0
     linear_movement = 0
 
@@ -47,6 +53,10 @@ while 1:
 
     if keys[pygame.K_DOWN]:
         linear_movement = -lin_speed
+
+    if keys[pygame.K_ESCAPE]:
+        stopped = True
+        quit()
 
     twist = Twist()
     twist.angular.z = angular_movement
